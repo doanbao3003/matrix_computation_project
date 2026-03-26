@@ -47,7 +47,7 @@ class Matrix:
                     element = sum(self.data[i][k] * other.data[k][j] for k in range(self.cols))
                     new_row.append(element)
                 new_data.append(new_row)
-            return Matrix(new_data, f"({self.name} * {other.name})")
+            return Matrix(new_data, f"({self.name} * {other.name})")  
     
     def copy_from(self, other): # Hàm copy ma trận
         if not self.data: 
@@ -70,4 +70,20 @@ class Matrix:
             for i in range(self.rows):
                 self.data[i][a], self.data[i][b] = self.data[i][b], self.data[i][a]
         else:
-            print("Chỉ số cột không hợp lệ")
+            print("Chỉ số cột không hợp lệ.")
+            
+    def multiply_row_with_real_number(self, i, k): # Nhân hàng i với số thực k
+        if k == 0:
+            raise ValueError("Số thực dùng để nhân với ma trận không được bằng 0.")
+            
+        if 0 <= i < self.rows:
+            for j in range(self.cols):
+                self.data[i][j] *= k
+        else:
+            print("Chỉ số hàng không hợp lệ.")
+
+    def add_multiple_of_row(self, i, j, k): # Lấy hàng thứ i + k*hàng thứ j
+        if not (0 <= i < self.rows and 0 <= j < self.rows):
+            raise IndexError(f"Chỉ số hàng không hợp lệ.")
+        for c in range(self.cols):
+            self.data[i][c] += k * self.data[j][c]
