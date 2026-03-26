@@ -87,3 +87,7 @@ class Matrix:
             raise IndexError(f"Chỉ số hàng không hợp lệ.")
         for c in range(self.cols):
             self.data[i][c] += k * self.data[j][c]
+            
+    def get_Tran(self): # Hàm lấy ma trận chuyển vị
+        new_data = [[self.data[j][i] for j in range(self.rows)] for i in range(self.cols)]
+        return Matrix(new_data)
