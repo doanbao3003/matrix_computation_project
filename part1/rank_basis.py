@@ -3,4 +3,4 @@ def rank_and_basic(A): # Hàm tính hạng của ma trận, sau đấy tìm cơ 
   n = A.rows
   b = Matrix([0] x n)
   new_b = get_Tran(b)
-  
+  gaussian_eliminate(A, b)
