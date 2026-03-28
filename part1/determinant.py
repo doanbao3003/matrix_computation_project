@@ -1,3 +1,4 @@
+from gaussian import Matrix
 def determinant(A):
     if A.rows != A.cols:
         raise ValueError(f"Ma trận {A.name} không phải ma trận vuông nên không có định thức.")
