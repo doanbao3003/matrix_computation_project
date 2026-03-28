@@ -33,7 +33,56 @@ def gaussian_eliminate(A, b):
     b.data = [row[n_cols_a:] for row in Ab.data]
     A.rows, A.cols = len(A.data), len(A.data[0])
     b.rows, b.cols = len(b.data), len(b.data[0])
+    
+def gaussian_eliminate_2(A, b):
+    if A.rows != b.rows:
+        raise ValueError("Số hàng của A và b phải bằng nhau.")
 
+    n = A.rows
+    m = A.cols
+    
+    # Tạo ma trận bổ sung Ab bằng cách ghép A và b
+    aug_data = []
+    for i in range(n):
+        aug_data.append(A.data[i] + b.data[i])
+    Ab = Matrix(aug_data, "Augmented_RREF")
+
+    pivot_row = 0
+    for j in range(m): # Duyệt qua từng cột của A
+        if pivot_row >= n:
+            break
+            
+        # 1. Tìm hàng có phần tử lớn nhất ở cột j (tính từ hàng pivot_row trở xuống)
+        max_idx = pivot_row
+        for k in range(pivot_row + 1, n):
+            if abs(Ab.data[k][j]) > abs(Ab.data[max_idx][j]):
+                max_idx = k
+        
+        # Nếu cột toàn số 0 (hoặc rất nhỏ), bỏ qua cột này
+        if abs(Ab.data[max_idx][j]) < 1e-10:
+            continue
+            
+        # 2. Hoán đổi hàng hiện tại với hàng chứa phần tử lớn nhất
+        Ab.swap_rows(pivot_row, max_idx)
+        
+        # 3. CHUẨN HÓA: Đưa phần tử chốt về 1
+        pivot_val = Ab.data[pivot_row][j]
+        Ab.multiply_row_with_real_number(pivot_row, 1.0 / pivot_val)
+        
+        # 4. KHỬ CẢ TRÊN VÀ DƯỚI: Biến các phần tử khác trong cột j về 0
+        for i in range(n):
+            if i != pivot_row: # Khử cả hàng trên và hàng dưới pivot
+                factor = -Ab.data[i][j]
+                Ab.add_multiple_of_row(i, pivot_row, factor)
+        
+        pivot_row += 1
+
+    # Cập nhật lại dữ liệu cho A và b từ ma trận Ab đã biến đổi
+    A.data = [row[:m] for row in Ab.data]
+    b.data = [row[m:] for row in Ab.data]
+    A.rows, A.cols = len(A.data), len(A.data[0])
+    b.rows, b.cols = len(b.data), len(b.data[0])
+    
 def back_substitution(A, b):
     # 1. Kiểm tra kích thước b (phải là n x 1)
     if b.cols != 1:
