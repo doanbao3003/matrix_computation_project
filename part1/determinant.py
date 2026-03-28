@@ -1,41 +1,32 @@
-from __future__ import annotations
-from __init__ import Matrix
-
-
-EPSILON = 1e-12
-
-
 def determinant(A):
-    """Tính định thức bằng khử Gauss có partial pivoting."""
-    if not isinstance(A, Matrix):
-        raise TypeError("A phải là một đối tượng Matrix.")
     if A.rows != A.cols:
-        raise ValueError("Chỉ tính định thức cho ma trận vuông.")
+        raise ValueError(f"Ma trận {A.name} không phải ma trận vuông nên không có định thức.")
 
-    temp = Matrix([row[:] for row in A.data], name=f"copy({A.name})")
-    n = temp.rows
-    swap_count = 0
+    n = A.rows
+    temp_data = copy(A)
+    
     det = 1.0
+    swaps = 0
 
-    for pivot_col in range(n):
-        max_row = max(range(pivot_col, n), key=lambda r: abs(temp.data[r][pivot_col]))
-        if abs(temp.data[max_row][pivot_col]) < EPSILON:
+    for i in range(n):
+        max_row = i
+        for k in range(i + 1, n):
+            if abs(temp_data[k][i]) > abs(temp_data[max_row][i]):
+                max_row = k
+        
+        if max_row != i:
+            temp_data[i], temp_data[max_row] = temp_data[max_row], temp_data[i]
+            swaps += 1
+            
+        if abs(temp_data[i][i]) < 1e-10:
             return 0.0
+            
+        for k in range(i + 1, n):
+            factor = temp_data[k][i] / temp_data[i][i]
+            for j in range(i, n):
+                temp_data[k][j] -= factor * temp_data[i][j]
 
-        if max_row != pivot_col:
-            temp.swap_rows(max_row, pivot_col)
-            swap_count += 1
+    for i in range(n):
+        det *= temp_data[i][i]
 
-        pivot = temp.data[pivot_col][pivot_col]
-        det *= pivot
-
-        for r in range(pivot_col + 1, n):
-            if abs(temp.data[r][pivot_col]) < EPSILON:
-                continue
-            factor = temp.data[r][pivot_col] / pivot
-            temp.add_multiple_of_row(r, pivot_col, -factor)
-            temp.data[r][pivot_col] = 0.0
-
-    if swap_count % 2 == 1:
-        det = -det
-    return det
+    return det * ((-1) ** swaps)
