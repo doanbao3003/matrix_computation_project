@@ -1,9 +1,10 @@
-def determinant(A):
+def determinant(A): # Hàm tính định thức ma trận
     if A.rows != A.cols:
         raise ValueError(f"Ma trận {A.name} không phải ma trận vuông nên không có định thức.")
 
     n = A.rows
-    temp_data = A.copy()
+    temp_matrix = A.copy()
+    m_data = temp_matrix.data
     
     det = 1.0
     swaps = 0
@@ -11,22 +12,22 @@ def determinant(A):
     for i in range(n):
         max_row = i
         for k in range(i + 1, n):
-            if abs(temp_data[k][i]) > abs(temp_data[max_row][i]):
+            if abs(m_data[k][i]) > abs(m_data[max_row][i]):
                 max_row = k
         
         if max_row != i:
-            temp_data[i], temp_data[max_row] = temp_data[max_row], temp_data[i]
+            temp_matrix.swap_rows(i, max_row)
             swaps += 1
             
-        if abs(temp_data[i][i]) < 1e-10:
+        if abs(m_data[i][i]) < 1e-10:
             return 0.0
             
         for k in range(i + 1, n):
-            factor = temp_data[k][i] / temp_data[i][i]
+            factor = m_data[k][i] / m_data[i][i]
             for j in range(i, n):
-                temp_data[k][j] -= factor * temp_data[i][j]
+                m_data[k][j] -= factor * m_data[i][j]
 
     for i in range(n):
-        det *= temp_data[i][i]
+        det *= m_data[i][i]
 
     return det * ((-1) ** swaps)
