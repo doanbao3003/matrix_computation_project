@@ -1,4 +1,3 @@
-from gaussian import gaussian_eliminate_2
 def rank_and_basic(A): # Hàm tìm hạng, cơ sở của không gian dòng, cột, nghiệm
     # Hàm sẽ trả về dictionary lưu lại cá giá trị hạng, cơ sở của không gian dòng, cột, nghiệm
     n = A.rows
