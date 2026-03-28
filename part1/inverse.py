@@ -1,10 +1,10 @@
-def inverse(A): #Hàm tìm nghịch đảo của ma trận bằng sử dụng phép khử Gauss-Jordan
+def inverse(A): # Hàm tìm nghịch đảo ma trận bằng phương pháp Gauss-Jordan
     if A.rows != A.cols:
-        raise ValueError(f"Ma trận {A.name} không phải ma trận vuông.")
+        raise ValueError(f"Ma trận {A.name} không phải ma trận vuông ({A.rows}x{A.cols}).")
 
     n = A.rows
     
-    A_copy = copy(A)
+    A_copy = A.copy(name=f"{A.name}_tmp")
 
     identity_data = [[1.0 if i == j else 0.0 for j in range(n)] for i in range(n)]
     I = Matrix(identity_data, "Identity")
@@ -16,5 +16,6 @@ def inverse(A): #Hàm tìm nghịch đảo của ma trận bằng sử dụng ph
             print(f"Ma trận {A.name} là ma trận suy biến (không có nghịch đảo).")
             return None
 
-    I.name = f"Inverse of {A.name}"
+    # 6. Trả về kết quả
+    I.name = f"({A.name})^-1"
     return I
