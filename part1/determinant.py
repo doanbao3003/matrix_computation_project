@@ -4,7 +4,7 @@ def determinant(A):
         raise ValueError(f"Ma trận {A.name} không phải ma trận vuông nên không có định thức.")
 
     n = A.rows
-    temp_data = copy(A)
+    temp_data = A.copy()
     
     det = 1.0
     swaps = 0
