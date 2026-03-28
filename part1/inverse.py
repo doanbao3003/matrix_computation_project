@@ -1,26 +1,23 @@
-from __future__ import annotations
-from __init__ import Matrix
-
-
 from gaussian import gaussian_eliminate_2
-from determinant import determinant
 
-EPSILON = 1e-12
-
-
-def Inverse(A):
-    """Tính ma trận nghịch đảo bằng Gauss-Jordan trên [A | I]."""
-    if not isinstance(A, Matrix):
-        raise TypeError("A phải là một đối tượng Matrix.")
+def inverse(A):
     if A.rows != A.cols:
-        raise ValueError("Chỉ có thể tìm nghịch đảo của ma trận vuông.")
-    if abs(determinant(A)) < EPSILON:
-        raise ValueError("Ma trận suy biến nên không có nghịch đảo.")
+        print(f"Lỗi: Ma trận {A.name} không phải ma trận vuông.")
+        return None
 
-    left = Matrix([row[:] for row in A.data], name=f"copy({A.name})")
     n = A.rows
-    identity = [[1.0 if i == j else 0.0 for j in range(n)] for i in range(n)]
-    right = Matrix(identity, name=f"I_{n}")
+    
+    A_copy = Matrix([row[:] for row in A.data], A.name)
+    
+    identity_data = [[1.0 if i == j else 0.0 for j in range(n)] for i in range(n)]
+    I = Matrix(identity_data, "Identity")
 
-    gaussian_eliminate_2(left, right)
-    return right
+    rref_gaussian_eliminate(A_copy, I)
+
+    for i in range(n):
+        if abs(A_copy.data[i][i] - 1.0) > 1e-10:
+            print(f"Ma trận {A.name} là ma trận suy biến (không có nghịch đảo).")
+            return None
+
+    I.name = f"Inverse of {A.name}"
+    return I
