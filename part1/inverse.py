@@ -1,18 +1,17 @@
 from gaussian import gaussian_eliminate_2
 
-def inverse(A):
+def inverse(A): #Hàm tìm nghịch đảo của ma trận bằng sử dụng phép khử Gauss-Jordan
     if A.rows != A.cols:
-        print(f"Lỗi: Ma trận {A.name} không phải ma trận vuông.")
-        return None
+        raise ValueError(f"Ma trận {A.name} không phải ma trận vuông."}
 
     n = A.rows
     
-    A_copy = Matrix([row[:] for row in A.data], A.name)
-    
+    A_copy = copy_from(A)
+
     identity_data = [[1.0 if i == j else 0.0 for j in range(n)] for i in range(n)]
     I = Matrix(identity_data, "Identity")
 
-    rref_gaussian_eliminate(A_copy, I)
+    gaussian_eliminate_2(A_copy, I)
 
     for i in range(n):
         if abs(A_copy.data[i][i] - 1.0) > 1e-10:
