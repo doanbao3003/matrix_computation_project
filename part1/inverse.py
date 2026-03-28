@@ -2,7 +2,7 @@ from gaussian import gaussian_eliminate_2
 
 def inverse(A): #Hàm tìm nghịch đảo của ma trận bằng sử dụng phép khử Gauss-Jordan
     if A.rows != A.cols:
-        raise ValueError(f"Ma trận {A.name} không phải ma trận vuông."}
+        raise ValueError(f"Ma trận {A.name} không phải ma trận vuông.")
 
     n = A.rows
     
