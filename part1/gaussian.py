@@ -1,5 +1,3 @@
-from __init__ import Matrix
-
 def gaussian_eliminate(A, b): # Hàm nhận ma trận A, b và thực hiện khử ma trận bằng Gauss-Jordan (REF)
     if A.rows != b.rows:
         raise ValueError("Số hàng của A và b phải bằng nhau.")
