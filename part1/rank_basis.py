@@ -1,44 +1,49 @@
-from __future__ import annotations
-from __init__ import Matrix
-
-
 from gaussian import gaussian_eliminate_2
-
-EPSILON = 1e-12
-
-
 def rank_and_basic(A):
-    """Trả về cơ sở không gian dòng, cơ sở không gian cột và hạng của ma trận."""
-    if not isinstance(A, Matrix):
-        raise TypeError("A phải là một đối tượng Matrix.")
-
-    original = Matrix([row[:] for row in A.data], name=A.name)
-    rref_A = Matrix([row[:] for row in A.data], name=f"rref({A.name})")
-    zero_side = Matrix([[0.0] for _ in range(A.rows)], name='0')
-    gaussian_eliminate_2(rref_A, zero_side)
-
+    n = A.rows
+    m = A.cols
+    
+    A_copy = copy(A)
+    b_dummy = Matrix([[0.0] for _ in range(n)], "zero")
+    gaussian_eliminate_2(A_copy, b_dummy)
+    
     pivot_cols = []
-    for i in range(rref_A.rows):
-        pivot_col = None
-        for j in range(rref_A.cols):
-            if abs(rref_A.data[i][j]) > EPSILON:
-                pivot_col = j
+    row_basis = []
+    
+    for i in range(n):
+        is_zero_row = True
+        for j in range(m):
+            if abs(A_copy.data[i][j]) > 1e-10:
+                if is_zero_row:
+                    pivot_cols.append(j)
+                    is_zero_row = False
                 break
-        if pivot_col is not None:
-            pivot_cols.append(pivot_col)
-
-    row_basis = [row[:] for row in rref_A.data if any(abs(x) > EPSILON for x in row)]
-    col_basis = [[original.data[r][c]] for r in range(original.rows) for c in []]
-    col_basis = [[original.data[r][c] for r in range(original.rows)] for c in pivot_cols]
-
+        if not is_zero_row:
+            row_basis.append(A_copy.data[i])
+            
+    rank = len(pivot_cols)
+    
+    col_basis = []
+    for j in pivot_cols:
+        column = [A.data[i][j] for i in range(n)]
+        col_basis.append(column)
+        
+    null_basis = []
+    free_vars = [j for j in range(m) if j not in pivot_cols]
+    
+    for free_idx in free_vars:
+        special_solution = [0.0] * m
+        special_solution[free_idx] = 1.0
+        
+        for i in range(len(pivot_cols)):
+            p_col = pivot_cols[i]
+            special_solution[p_col] = -A_copy.data[i][free_idx]
+            
+        null_basis.append(special_solution)
+        
     return {
-        'rank': len(pivot_cols),
-        'row_basis': row_basis,
-        'column_basis': col_basis,
-        'pivot_columns': pivot_cols,
-        'rref': rref_A,
+        "rank": rank,
+        "row_basis": row_basis,
+        "col_basis": col_basis,
+        "null_basis": null_basis
     }
-
-
-# Alias tên đúng theo mô tả đề bài nếu cần dùng.
-rank_and_basis = rank_and_basic
