@@ -6,7 +6,7 @@ def inverse(A): #Hàm tìm nghịch đảo của ma trận bằng sử dụng ph
 
     n = A.rows
     
-    A_copy = copy_from(A)
+    A_copy = copy(A)
 
     identity_data = [[1.0 if i == j else 0.0 for j in range(n)] for i in range(n)]
     I = Matrix(identity_data, "Identity")
