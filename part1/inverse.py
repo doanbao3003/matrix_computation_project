@@ -10,7 +10,7 @@ def inverse(A): # Hàm tìm nghịch đảo ma trận bằng phương pháp Gaus
     identity_data = [[1.0 if i == j else 0.0 for j in range(n)] for i in range(n)]
     I = Matrix(identity_data, "Identity")
 
-    gaussian_eliminate_2(A_copy, I)
+    gaussian_eliminate(A_copy, I)
 
     for i in range(n):
         if abs(A_copy.data[i][i] - 1.0) > 1e-10:
