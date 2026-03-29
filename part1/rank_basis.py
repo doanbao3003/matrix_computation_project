@@ -5,7 +5,7 @@ def rank_and_basic(A):
     
     b_dummy = Matrix([[0.0] for _ in range(n)], "zero")
     
-    gaussian_eliminate_2(A_copy, b_dummy)
+    gaussian_eliminate(A_copy, b_dummy)
     
     pivot_cols = []
     row_basis = []
