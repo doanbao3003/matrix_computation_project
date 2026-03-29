@@ -1,36 +1,4 @@
-def gaussian_eliminate(A, b): #Hàm nhận 2 ma trận A, b, gộp 2 ma trận này lại và đưa ma trận về dạng bậc thang (REF), sau đó tách 2 ma trận ra.
-    if A.rows != b.rows:
-        raise ValueError("Số hàng của A và b phải bằng nhau.")
-
-    n_cols_a = A.cols
-    aug_data = [A.data[i] + b.data[i] for i in range(A.rows)]
-    Ab = Matrix(aug_data, "Augmented_REF")
-    n, m = Ab.rows, Ab.cols
-
-    pivot_row = 0
-    for j in range(n_cols_a):
-        if pivot_row >= n: break
-        
-        max_row = pivot_row
-        for k in range(pivot_row + 1, n):
-            if abs(Ab.data[k][j]) > abs(Ab.data[max_row][j]):
-                max_row = k
-        Ab.swap_rows(pivot_row, max_row)
-
-        if abs(Ab.data[pivot_row][j]) < 1e-10:
-            continue
-
-        for k in range(pivot_row + 1, n):
-            factor = -Ab.data[k][j] / Ab.data[pivot_row][j]
-            Ab.add_multiple_of_row(k, pivot_row, factor)
-        
-        pivot_row += 1
-
-    A.data = [row[:n_cols_a] for row in Ab.data]
-    b.data = [row[n_cols_a:] for row in Ab.data]
-    return A, b
-
-def gaussian_eliminate_2(A, b): # Hàm nhận 2 ma trận A, b, gộp 2 ma trận này lại và đưa ma trận về dạng chuẩn tắc (RREF), sau đó tách 2 ma trận ra.
+def gaussian_eliminate(A, b): # Hàm nhận 2 ma trận A, b, gộp 2 ma trận này lại và đưa ma trận về dạng chuẩn tắc (RREF), sau đó tách 2 ma trận ra.
     n, m = A.rows, A.cols
     aug_data = [A.data[i] + b.data[i] for i in range(n)]
     Ab = Matrix(aug_data, "Augmented")
