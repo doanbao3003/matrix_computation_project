@@ -1,4 +1,4 @@
-from gaussian import gaussian_eliminate_2
+from gaussian import gaussian_eliminate
 def rank_and_basic(A):
     n, m = A.rows, A.cols
     A_copy = A.copy()
