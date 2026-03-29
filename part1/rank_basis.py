@@ -1,3 +1,4 @@
+from gaussian import gaussian_eliminate_2
 def rank_and_basic(A):
     n, m = A.rows, A.cols
     A_copy = A.copy()
@@ -8,6 +9,7 @@ def rank_and_basic(A):
     
     pivot_cols = []
     row_basis = []
+    col_basis = []
     
     for i in range(n):
         found_pivot = False
