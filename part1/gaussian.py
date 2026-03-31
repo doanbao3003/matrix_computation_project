@@ -83,7 +83,11 @@ def back_substitution(A, b): # Hàm giải hệ phương trình bậc thang.
             res[curr_col] = final_constant
         else:
             expr = " ".join(expression_parts)
-            if expr.startswith("+ "): expr = expr[2:]
-            res[curr_col] = f"{final_constant} {expr}" if final_constant != 0 else expr
+            if final_constant == 0:
+                if expr.startswith("+ "): 
+                    expr = expr[2:]
+                res[curr_col] = expr
+            else:
+                res[curr_col] = f"{final_constant} {expr}"
 
     return res
