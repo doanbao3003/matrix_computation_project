@@ -7,38 +7,53 @@ Nhiệm vụ:
 - Phục vụ cho SVD (trên A^T A)
 """
 
+import numpy as np
+
 
 def transpose(A):
     """
     Input: A (matrix)
     Output: A^T
-
-    TODO:
-    - Viết hàm chuyển vị ma trận
     """
-    pass
+    rows = len(A)
+    cols = len(A[0])
+
+    AT = [[0 for _ in range(rows)] for _ in range(cols)]
+
+    for i in range(rows):
+        for j in range(cols):
+            AT[j][i] = A[i][j]
+
+    return AT
 
 
 def matmul(A, B):
     """
     Input: A, B (matrix)
     Output: A * B
-
-    TODO:
-    - Viết phép nhân ma trận
     """
-    pass
+    n = len(A)
+    m = len(A[0])
+    p = len(B[0])
+
+    # Khởi tạo ma trận kết quả
+    C = [[0 for _ in range(p)] for _ in range(n)]
+
+    for i in range(n):
+        for j in range(p):
+            for k in range(m):
+                C[i][j] += A[i][k] * B[k][j]
+
+    return C
 
 
 def compute_ata(A):
     """
     Input: A
     Output: A^T A
-
-    TODO:
-    - Dùng transpose + matmul
     """
-    pass
+    AT = transpose(A)
+    return matmul(AT, A)
 
 
 def eigen_decomposition(A):
@@ -47,39 +62,49 @@ def eigen_decomposition(A):
     Output:
         eigenvalues: list[float]
         eigenvectors: matrix (các vector cột)
-
-    TODO:
-    - Có thể dùng numpy để lấy eigenvalues/eigenvectors
-    - Convert về list nếu cần
-    - Đảm bảo output đúng format
-
-    Lưu ý:
-    - Đây là hàm CHÍNH mà decomposition.py sẽ gọi
     """
-    pass
+    A_np = np.array(A, dtype=float)
+
+    eigenvalues, eigenvectors = np.linalg.eig(A_np)
+
+    # Convert về list
+    eigenvalues = eigenvalues.tolist()
+    eigenvectors = eigenvectors.tolist()
+
+    return eigenvalues, eigenvectors
 
 
 def sort_eigenpairs(eigenvalues, eigenvectors):
     """
-    Input:
-        eigenvalues
-        eigenvectors
-    Output:
-        eigenvalues, eigenvectors (đã sort giảm dần)
-
-    TODO:
-    - Sort theo eigenvalues giảm dần
-    - reorder eigenvectors tương ứng
+    Sort eigenvalues giảm dần và reorder eigenvectors
     """
-    pass
+    # Tạo list (eigenvalue, eigenvector)
+    pairs = list(zip(eigenvalues, zip(*eigenvectors)))  
+    # zip(*eigenvectors) để lấy vector theo cột
+
+    # Sort giảm dần theo eigenvalue
+    pairs.sort(key=lambda x: x[0], reverse=True)
+
+    # Tách lại
+    sorted_values = [pair[0] for pair in pairs]
+    sorted_vectors = list(zip(*[pair[1] for pair in pairs]))
+
+    # Convert tuple → list
+    sorted_vectors = [list(row) for row in sorted_vectors]
+
+    return sorted_values, sorted_vectors
 
 
 def build_diagonal(eigenvalues):
     """
     Input: eigenvalues
     Output: ma trận đường chéo D
-
-    TODO:
-    - D[i][i] = eigenvalues[i]
     """
-    pass
+    n = len(eigenvalues)
+
+    D = [[0 for _ in range(n)] for _ in range(n)]
+
+    for i in range(n):
+        D[i][i] = eigenvalues[i]
+
+    return D
