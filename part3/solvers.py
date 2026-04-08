@@ -10,25 +10,46 @@ Nhiệm vụ:
     3. Viết mới Gauss–Seidel
 - Chuẩn hóa đầu ra để benchmark và notebook dùng chung được.
 
-- Khi làm xong phải thống nhất API cho Khánh với Thoại.
+Lưu ý quan trọng:
+- benchmark.py truyền A dạng list 2D, b dạng list phẳng (flat list).
+- Mọi solver đều nhận (A, b) với format trên và trả về SolveResult.
+- Class Matrix được tách ra file part1/matrix.py, import từ đó.
+  Khi import matrix.py, nó tự động inject Matrix vào builtins
+  để gaussian.py vẫn gọi Matrix() trực tiếp được.
 """
 
+import os
+import sys
+import math
 from dataclasses import dataclass
 from typing import List, Optional
 
+# THIẾT LẬP MÔI TRƯỜNG
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+_project_root = os.path.dirname(_current_dir)  # thư mục gốc dự án
+_part1_dir = os.path.join(_project_root, "part1")
+_part2_dir = os.path.join(_project_root, "part2")
 
+for _path in [_current_dir, _part1_dir, _part2_dir]:
+    if _path not in sys.path:
+        sys.path.insert(0, _path)
+
+from matrix import Matrix
+from gaussian import gaussian_eliminate, back_substitution
+from decomposition import svd, matmul, transpose, inverse_diagonal
+
+# PHẦN 1: KIỂU DỮ LIỆU KẾT QUẢ CHUẨN HÓA
 @dataclass
 class SolveResult:
     """
-    Mục đích:
-    - Gom kết quả của mọi phương pháp giải hệ về cùng một khuôn dạng.
+    Kết quả chuẩn hóa cho mọi phương pháp giải hệ.
 
     Thuộc tính:
-    - x: nghiệm gần đúng tìm được
-    - converged: có hội tụ hay không
-    - iterations: số vòng lặp (nếu là phương pháp lặp)
-    - method: tên phương pháp
-    - note: ghi chú thêm
+        x:          nghiệm tìm được (list số thực), rỗng nếu thất bại
+        converged:  True nếu phương pháp hội tụ / thành công
+        iterations: số vòng lặp (None nếu là phương pháp trực tiếp)
+        method:     tên phương pháp (str)
+        note:       ghi chú bổ sung (str)
     """
     x: List[float]
     converged: bool
@@ -36,102 +57,345 @@ class SolveResult:
     method: str
     note: str = ""
 
-
+# PHẦN 2: HÀM TIỆN ÍCH
 def relative_residual_l2(A, x, b):
     """
-    TODO:
-    - Tính sai số tương đối theo đúng đề:
-        ||Ax - b||_2 / ||b||_2
+    Tính sai số tương đối theo chuẩn L2:
 
-  
+        sai_số = ||Ax - b||₂ / ||b||₂
 
-    Vai trò trong toàn bài:
-    - Đây là hàm dùng chung để benchmark và phân tích kết quả.
+    Tham số:
+        A: ma trận hệ số, list 2D kích thước n×n
+        x: nghiệm tính được, list phẳng dài n
+        b: vế phải, list phẳng dài n
+
+    Trả về:
+        float: sai số tương đối (càng nhỏ càng tốt)
+        inf nếu ||b|| ≈ 0
+
+    Vai trò:
+        Dùng chung cho benchmark và phân tích kết quả.
     """
-    pass
+    n = len(A)
+
+    # Bước 1: Tính tích Ax (nhân ma trận với vector)
+    Ax = [0.0] * n
+    for i in range(n):
+        for j in range(n):
+            Ax[i] += A[i][j] * x[j]
+
+    # Bước 2: Tính vector sai lệch r = Ax - b
+    residual = [Ax[i] - b[i] for i in range(n)]
+
+    # Bước 3: Tính chuẩn L2 của residual = √(Σ rᵢ²)
+    norm_res = math.sqrt(sum(r * r for r in residual))
+
+    # Bước 4: Tính chuẩn L2 của b
+    norm_b = math.sqrt(sum(bi * bi for bi in b))
+
+    # Bước 5: Nếu ||b|| quá nhỏ thì trả về inf (tránh chia cho 0)
+    if norm_b < 1e-15:
+        return float("inf")
+
+    return norm_res / norm_b
+
+# PHẦN 3: SOLVER 1 — GAUSS-JORDAN (TÁI SỬ DỤNG PART 1)
 
 
 def solve_gauss_part1(A, b):
     """
-    TODO:
-    - Gọi lại code Gauss có partial pivoting từ Phần 1.
-    - Không viết lại nếu nhóm đã có hàm hoàn chỉnh.
+    Giải hệ Ax = b bằng phương pháp khử Gauss-Jordan từ Part 1.
 
-    Gợi ý triển khai:
-    - import từ part1/gaussian.py
-    - nhận nghiệm x
-    - đóng gói vào SolveResult
+    Luồng xử lý:
+        1. Chuyển A (list 2D) và b (list phẳng) → đối tượng Matrix
+        2. Gọi gaussian_eliminate() → đưa [A|b] về dạng RREF
+        3. Gọi back_substitution() → tìm nghiệm
+        4. Kiểm tra: nghiệm duy nhất (toàn số) hay vô số nghiệm (có biến tự do)
+        5. Đóng gói kết quả vào SolveResult
 
+    Tham số:
+        A: list 2D (n×n) — ma trận hệ số
+        b: list phẳng (n,) — vế phải
+
+    Trả về:
+        SolveResult
     """
-    pass
+    n = len(A)
 
+    # --- Bước 1: Tạo bản sao dưới dạng Matrix ---
+    # Cần copy vì gaussian_eliminate sẽ thay đổi dữ liệu trực tiếp (in-place)
+    A_mat = Matrix([row[:] for row in A], "A")
+
+    # Chuyển b từ list phẳng [b1, b2, ...] → ma trận cột [[b1], [b2], ...]
+    # vì gaussian_eliminate yêu cầu b là Matrix với mỗi hàng là 1 list
+    b_mat = Matrix([[b[i]] for i in range(n)], "b")
+
+    # --- Bước 2: Khử Gauss-Jordan → RREF ---
+    gaussian_eliminate(A_mat, b_mat)
+
+    # --- Bước 3: Giải hệ bậc thang ---
+    # back_substitution trả về:
+    #   - [] nếu vô nghiệm
+    #   - list[float] nếu nghiệm duy nhất
+    #   - list[float | str] nếu vô số nghiệm (biến tự do dạng "t1", "t2", ...)
+    x_sol = back_substitution(A_mat, b_mat)
+
+    # --- Bước 4: Xử lý kết quả ---
+
+    # Trường hợp 1: Không có nghiệm (hệ vô nghiệm)
+    if not x_sol:
+        return SolveResult(
+            x=[],
+            converged=False,
+            iterations=None,
+            method="Gauss-Jordan (Part 1)",
+            note="Hệ vô nghiệm"
+        )
+
+    # Trường hợp 2: Kiểm tra xem nghiệm có phải toàn số không
+    numeric_x = []
+    for val in x_sol:
+        if isinstance(val, (int, float)):
+            # Phần tử là số → thêm vào danh sách nghiệm
+            numeric_x.append(float(val))
+        else:
+            # Phần tử là chuỗi biểu thức (vd: "2.0 + 1.0*t1")
+            # → hệ có vô số nghiệm, không trả nghiệm cụ thể cho benchmark
+            return SolveResult(
+                x=[],
+                converged=True,
+                iterations=None,
+                method="Gauss-Jordan (Part 1)",
+                note=f"Hệ có vô số nghiệm: {x_sol}"
+            )
+
+    # Trường hợp 3: Nghiệm duy nhất
+    return SolveResult(
+        x=numeric_x,
+        converged=True,
+        iterations=None,
+        method="Gauss-Jordan (Part 1)"
+    )
+
+
+# PHẦN 4: SOLVER 2 — SVD DECOMPOSITION (TÁI SỬ DỤNG PART 2)
 
 def solve_decomposition_part2(A, b):
     """
-    TODO:
-    - Gọi lại phương pháp phân rã mà nhóm đã chọn ở Phần 2.
-    - Ví dụ:
-        + LU
-        + QR
-        + SVD
-        + Cholesky
+    Giải hệ Ax = b bằng phân rã SVD từ Part 2.
 
-    Gợi ý triển khai:
-    - import từ part2/decomposition.py
-    - dùng kết quả phân rã để giải Ax = b
-    - đóng gói về SolveResult
+    Công thức:
+        A = U × Σ × Vᵀ
+        ⟹  x = V × Σ⁻¹ × Uᵀ × b
 
+    Luồng xử lý:
+        1. Gọi svd(A) → U, Σ, Vᵀ
+        2. Tính Σ⁻¹ (nghịch đảo ma trận đường chéo, chỉ cần lật 1/σᵢ)
+        3. Tính V = (Vᵀ)ᵀ  và  Uᵀ = transpose(U)
+        4. Nhân chuỗi: x = V × Σ⁻¹ × Uᵀ × b
+
+    Tham số:
+        A: list 2D (n×n)
+        b: list phẳng (n,)
+
+    Trả về:
+        SolveResult
     """
-    pass
+    n = len(A)
 
+    try:
+        # --- Bước 1: Phân rã SVD ---
+        #     svd(A) trả về U (m×m), Sigma (m×n), Vt (n×n)
+        #     trong đó A ≈ U × Sigma × Vt
+        U, Sigma, Vt = svd(A)
+
+        # --- Bước 2: Chuẩn bị các ma trận cần thiết ---
+        Ut = transpose(U)        # Uᵀ: chuyển vị của U
+        Sigma_inv = inverse_diagonal(Sigma)  # Σ⁻¹: nghịch đảo đường chéo
+        V = transpose(Vt)        # V = (Vᵀ)ᵀ
+
+        # --- Bước 3: Chuyển b thành ma trận cột ---
+        # b là list phẳng [b1, b2, ...] → cần chuyển thành [[b1], [b2], ...]
+        b_col = [[b[i]] for i in range(n)]
+
+        # --- Bước 4: Tính x = V × Σ⁻¹ × Uᵀ × b ---
+        # Nhân từ phải sang trái để tiết kiệm phép tính:
+        step1 = matmul(Ut, b_col)           # Uᵀ × b       → (n×1)
+        step2 = matmul(Sigma_inv, step1)     # Σ⁻¹ × (Uᵀb)  → (n×1)
+        x_col = matmul(V, step2)             # V × (Σ⁻¹Uᵀb) → (n×1)
+
+        # --- Bước 5: Chuyển kết quả về list phẳng ---
+        x = [x_col[i][0] for i in range(len(x_col))]
+
+        return SolveResult(
+            x=x,
+            converged=True,
+            iterations=None,
+            method="SVD Decomposition (Part 2)"
+        )
+
+    except Exception as e:
+        # SVD có thể thất bại với ma trận điều kiện kém (ill-conditioned)
+        return SolveResult(
+            x=[],
+            converged=False,
+            iterations=None,
+            method="SVD Decomposition (Part 2)",
+            note=f"Lỗi SVD: {e}"
+        )
+
+
+# PHẦN 5: KIỂM TRA ĐIỀU KIỆN CHÉO TRỘI
 
 def is_strictly_diagonally_dominant(A):
     """
-    TODO:
-    - Kiểm tra điều kiện chéo trội hàng:
-        |a_ii| > tổng |a_ij| với j != i
+    Kiểm tra ma trận A có chéo trội hàng nghiêm ngặt hay không.
+
+    Điều kiện chéo trội hàng:
+        Với mọi hàng i:  |a_ii| > Σ |a_ij|   (j ≠ i)
+
+        Tức phần tử đường chéo phải lớn hơn (strict) tổng tất cả
+        phần tử còn lại trên cùng hàng (tính theo giá trị tuyệt đối).
 
     Ý nghĩa:
-    - Dùng để kiểm tra điều kiện hội tụ đủ cho Gauss–Seidel.
+        Nếu A chéo trội → Gauss-Seidel CHẮC CHẮN hội tụ (điều kiện đủ).
+        Nếu không chéo trội → có thể hội tụ hoặc không (phải thử).
 
+    Tham số:
+        A: list 2D (n×n)
+
+    Trả về:
+        True nếu chéo trội, False nếu không
     """
-    pass
+    n = len(A)
 
+    for i in range(n):
+        # Giá trị tuyệt đối phần tử đường chéo a_ii
+        diag = abs(A[i][i])
 
-def solve_gauss_seidel(A, b, x0=None, max_iter=100, tol=1e-9):
+        # Tổng giá trị tuyệt đối các phần tử ngoài đường chéo trên hàng i
+        off_diag_sum = sum(abs(A[i][j]) for j in range(n) if j != i)
+
+        # Điều kiện nghiêm ngặt: must be strictly greater, not equal
+        if diag <= off_diag_sum:
+            return False
+
+    return True
+
+# PHẦN 6: SOLVER 3 — GAUSS-SEIDEL (VIẾT MỚI)
+
+def solve_gauss_seidel(A, b, x0=None, max_iter=1000, tol=1e-10):
     """
-    TODO:
-    - Cài đặt Gauss–Seidel từ đầu.
-    - Có kiểm tra điều kiện hội tụ.
-    - Trả về:
-        + nghiệm x
-        + converged
-        + số vòng lặp
-        + ghi chú
+    Giải hệ Ax = b bằng phương pháp lặp Gauss-Seidel.
 
-    Các bước gợi ý:
-    1. Nếu x0 là None thì khởi tạo vector 0
-    2. Với mỗi vòng lặp:
-       - cập nhật từng phần tử x_i theo công thức Gauss–Seidel
-    3. Kiểm tra chuẩn sai khác giữa 2 lần lặp liên tiếp
-    4. Nếu nhỏ hơn tol thì dừng
+    Ý tưởng:
+        Gauss-Seidel là phương pháp lặp, cải tiến từ Jacobi.
+        Tại mỗi bước, khi tính x_i mới, ta dùng NGAY các giá trị
+        x_j đã được cập nhật trước đó (j < i), thay vì dùng toàn
+        bộ giá trị cũ như Jacobi.
 
+    Công thức cập nhật:
+        x_i^(k+1) = (1/a_ii) × [ b_i
+                                  - Σ a_ij × x_j^(k+1)   (j < i, đã cập nhật)
+                                  - Σ a_ij × x_j^(k)     (j > i, chưa cập nhật) ]
 
+    Điều kiện hội tụ:
+        - Đủ: ma trận A chéo trội hàng nghiêm ngặt
+        - Cần: bán kính phổ < 1 (khó kiểm tra trực tiếp)
+
+    Tiêu chuẩn dừng:
+        ||x^(k+1) - x^(k)||₂ < tol
+
+    Tham số:
+        A:        list 2D (n×n) — ma trận hệ số
+        b:        list phẳng (n,) — vế phải
+        x0:       list phẳng (n,) — nghiệm khởi tạo (mặc định = vector 0)
+        max_iter: int — số vòng lặp tối đa (mặc định 1000)
+        tol:      float — ngưỡng hội tụ (mặc định 1e-10)
+
+    Trả về:
+        SolveResult
     """
-    pass
+    n = len(A)
 
+    # --- Kiểm tra điều kiện hội tụ (chéo trội) ---
+    is_dominant = is_strictly_diagonally_dominant(A)
+
+    # --- Bước 1: Khởi tạo nghiệm ban đầu ---
+    # Nếu không truyền x0 thì bắt đầu từ vector 0
+    if x0 is None:
+        x = [0.0] * n
+    else:
+        x = x0[:]  # copy để không thay đổi dữ liệu gốc của caller
+
+    # --- Bước 2: Vòng lặp Gauss-Seidel ---
+    for iteration in range(1, max_iter + 1):
+        # Lưu lại nghiệm cũ để so sánh kiểm tra hội tụ
+        x_old = x[:]
+
+        # Cập nhật từng phần tử x_i
+        for i in range(n):
+            # Kiểm tra phần tử đường chéo khác 0
+            # (nếu a_ii = 0 thì không thể chia, phải dừng)
+            if abs(A[i][i]) < 1e-15:
+                return SolveResult(
+                    x=x,
+                    converged=False,
+                    iterations=iteration,
+                    method="Gauss-Seidel",
+                    note="Phần tử đường chéo a[{i}][{i}] ≈ 0, không thể tiếp tục"
+                )
+
+            # Tính tổng sigma = Σ a_ij * x_j với j ≠ i
+            # Lưu ý: x[j] với j < i đã được CẬP NHẬT ở bước trước trong cùng vòng lặp
+            #         x[j] với j > i vẫn là giá trị CŨ
+            # → Đây chính là điểm khác biệt so với phương pháp Jacobi
+            sigma = 0.0
+            for j in range(n):
+                if j != i:
+                    sigma += A[i][j] * x[j]
+
+            # Công thức cập nhật: x_i = (b_i - sigma) / a_ii
+            x[i] = (b[i] - sigma) / A[i][i]
+
+        # --- Bước 3: Kiểm tra hội tụ ---
+        # Tính chuẩn L2 của sai khác giữa nghiệm mới và nghiệm cũ
+        diff = math.sqrt(sum((x[i] - x_old[i]) ** 2 for i in range(n)))
+
+        if diff < tol:
+            # Hội tụ thành công!
+            return SolveResult(
+                x=x,
+                converged=True,
+                iterations=iteration,
+                method="Gauss-Seidel",
+                note=f"Hội tụ sau {iteration} vòng lặp"
+                     + (" (chéo trội)" if is_dominant else " (không chéo trội)")
+            )
+
+    # --- Không hội tụ sau max_iter vòng ---
+    return SolveResult(
+        x=x,
+        converged=False,
+        iterations=max_iter,
+        method="Gauss-Seidel",
+        note=f"Không hội tụ sau {max_iter} vòng lặp"
+             + (" (không chéo trội — không đảm bảo hội tụ)" if not is_dominant else "")
+    )
+
+# PHẦN 7: DANH SÁCH SOLVER CHO BENCHMARK
 
 def get_all_solvers():
     """
-    TODO:
-    - Trả về danh sách các solver sẽ được benchmark.
+    Trả về danh sách tất cả các hàm solver sẽ được benchmark.
 
-    Ví dụ:
-    - [solve_gauss_part1, solve_decomposition_part2, solve_gauss_seidel]
+    benchmark.py gọi hàm này để lấy danh sách solver,
+    giúp không phải viết cứng (hardcode) tên solver ở nhiều chỗ.
 
-
-
-    Vai trò:
-    - Giúp benchmark.py không phải viết cứng nhiều chỗ.
+    Khi thêm solver mới, chỉ cần thêm vào list này.
     """
-    pass
+    return [
+        solve_gauss_part1,
+        solve_decomposition_part2,
+        solve_gauss_seidel,
+    ]
