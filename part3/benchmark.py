@@ -18,6 +18,7 @@ import os
 import random
 import sys
 import time
+from solvers import get_all_solvers
 
 # Thêm thư mục hiện tại vào path để import được solvers.py
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -226,7 +227,7 @@ def benchmark_suite(ds_kich_thuoc=None):
     Trả về: list các dict kết quả (mỗi dict là 1 cặp solver - ma trận - kích thước)
     """
     if ds_kich_thuoc is None:
-        ds_kich_thuoc = [50, 100, 200, 500, 1000]
+        ds_kich_thuoc = [50, 100, 200, 300]
 
     # --- Import solvers (muộn để không lỗi nếu solvers.py chưa hoàn thiện) ---
     try:
