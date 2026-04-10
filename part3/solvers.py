@@ -7,7 +7,7 @@ Nhiệm vụ:
 - Tái sử dụng:
     1. Gauss từ Phần 1
     2. Phân rã từ Phần 2
-    3. Viết mới Gauss–Seidel
+    3. Viết mới Gauss-Seidel
 - Chuẩn hóa đầu ra để benchmark và notebook dùng chung được.
 
 Lưu ý quan trọng:
@@ -65,7 +65,7 @@ def relative_residual_l2(A, x, b):
         sai_số = ||Ax - b||₂ / ||b||₂
 
     Tham số:
-        A: ma trận hệ số, list 2D kích thước n×n
+        A: ma trận hệ số, list 2D kích thước nxn
         x: nghiệm tính được, list phẳng dài n
         b: vế phải, list phẳng dài n
 
@@ -114,7 +114,7 @@ def solve_gauss_part1(A, b):
         5. Đóng gói kết quả vào SolveResult
 
     Tham số:
-        A: list 2D (n×n) — ma trận hệ số
+        A: list 2D (nxn) — ma trận hệ số
         b: list phẳng (n,) — vế phải
 
     Trả về:
@@ -132,6 +132,21 @@ def solve_gauss_part1(A, b):
 
     # --- Bước 2: Khử Gauss-Jordan → RREF ---
     gaussian_eliminate(A_mat, b_mat)
+
+    # --- Bước 2.5: Dọn sai số dấu phẩy động ---
+    # Với ma trận lớn (n >= 50), sau RREF các hàng cuối của A có thể
+    # toàn giá trị gần 0 (vd: 1e-11) do tích lũy sai số floating point,
+    # nhưng b tương ứng lại còn "rác" lớn hơn (vd: 1e-9).
+    # back_substitution dùng ngưỡng 1e-10 để phân biệt:
+    #   - Hàng A toàn 0 VÀ b ≠ 0 → kết luận vô nghiệm
+    # Nên nếu hàng A gần 0, ta ép b về 0 luôn để tránh nhận nhầm.
+    ZERO_ROW_TOL = 1e-9  # ngưỡng rộng hơn 1e-10 của back_substitution
+    m = A_mat.cols
+    for i in range(A_mat.rows):
+        if all(abs(A_mat.data[i][j]) < ZERO_ROW_TOL for j in range(m)):
+            # Hàng A gần 0 → b tương ứng cũng chỉ là rác số học → ép về 0
+            for k in range(b_mat.cols):
+                b_mat.data[i][k] = 0.0
 
     # --- Bước 3: Giải hệ bậc thang ---
     # back_substitution trả về:
@@ -185,17 +200,17 @@ def solve_decomposition_part2(A, b):
     Giải hệ Ax = b bằng phân rã SVD từ Part 2.
 
     Công thức:
-        A = U × Σ × Vᵀ
-        ⟹  x = V × Σ⁻¹ × Uᵀ × b
+        A = U x Σ x Vᵀ
+        ⟹  x = V x Σ⁻¹ x Uᵀ x b
 
     Luồng xử lý:
         1. Gọi svd(A) → U, Σ, Vᵀ
         2. Tính Σ⁻¹ (nghịch đảo ma trận đường chéo, chỉ cần lật 1/σᵢ)
         3. Tính V = (Vᵀ)ᵀ  và  Uᵀ = transpose(U)
-        4. Nhân chuỗi: x = V × Σ⁻¹ × Uᵀ × b
+        4. Nhân chuỗi: x = V x Σ⁻¹ x Uᵀ x b
 
     Tham số:
-        A: list 2D (n×n)
+        A: list 2D (nxn)
         b: list phẳng (n,)
 
     Trả về:
@@ -205,8 +220,8 @@ def solve_decomposition_part2(A, b):
 
     try:
         # --- Bước 1: Phân rã SVD ---
-        #     svd(A) trả về U (m×m), Sigma (m×n), Vt (n×n)
-        #     trong đó A ≈ U × Sigma × Vt
+        #     svd(A) trả về U (mxm), Sigma (mxn), Vt (nxn)
+        #     trong đó A ≈ U x Sigma x Vt
         U, Sigma, Vt = svd(A)
 
         # --- Bước 2: Chuẩn bị các ma trận cần thiết ---
@@ -218,11 +233,11 @@ def solve_decomposition_part2(A, b):
         # b là list phẳng [b1, b2, ...] → cần chuyển thành [[b1], [b2], ...]
         b_col = [[b[i]] for i in range(n)]
 
-        # --- Bước 4: Tính x = V × Σ⁻¹ × Uᵀ × b ---
+        # --- Bước 4: Tính x = V x Σ⁻¹ x Uᵀ x b ---
         # Nhân từ phải sang trái để tiết kiệm phép tính:
-        step1 = matmul(Ut, b_col)           # Uᵀ × b       → (n×1)
-        step2 = matmul(Sigma_inv, step1)     # Σ⁻¹ × (Uᵀb)  → (n×1)
-        x_col = matmul(V, step2)             # V × (Σ⁻¹Uᵀb) → (n×1)
+        step1 = matmul(Ut, b_col)           # Uᵀ x b       → (nx1)
+        step2 = matmul(Sigma_inv, step1)     # Σ⁻¹ x (Uᵀb)  → (nx1)
+        x_col = matmul(V, step2)             # V x (Σ⁻¹Uᵀb) → (nx1)
 
         # --- Bước 5: Chuyển kết quả về list phẳng ---
         x = [x_col[i][0] for i in range(len(x_col))]
@@ -262,7 +277,7 @@ def is_strictly_diagonally_dominant(A):
         Nếu không chéo trội → có thể hội tụ hoặc không (phải thử).
 
     Tham số:
-        A: list 2D (n×n)
+        A: list 2D (nxn)
 
     Trả về:
         True nếu chéo trội, False nếu không
@@ -295,9 +310,9 @@ def solve_gauss_seidel(A, b, x0=None, max_iter=1000, tol=1e-10):
         bộ giá trị cũ như Jacobi.
 
     Công thức cập nhật:
-        x_i^(k+1) = (1/a_ii) × [ b_i
-                                  - Σ a_ij × x_j^(k+1)   (j < i, đã cập nhật)
-                                  - Σ a_ij × x_j^(k)     (j > i, chưa cập nhật) ]
+        x_i^(k+1) = (1/a_ii) x [ b_i
+                                  - Σ a_ij x x_j^(k+1)   (j < i, đã cập nhật)
+                                  - Σ a_ij x x_j^(k)     (j > i, chưa cập nhật) ]
 
     Điều kiện hội tụ:
         - Đủ: ma trận A chéo trội hàng nghiêm ngặt
@@ -307,7 +322,7 @@ def solve_gauss_seidel(A, b, x0=None, max_iter=1000, tol=1e-10):
         ||x^(k+1) - x^(k)||₂ < tol
 
     Tham số:
-        A:        list 2D (n×n) — ma trận hệ số
+        A:        list 2D (nxn) — ma trận hệ số
         b:        list phẳng (n,) — vế phải
         x0:       list phẳng (n,) — nghiệm khởi tạo (mặc định = vector 0)
         max_iter: int — số vòng lặp tối đa (mặc định 1000)
