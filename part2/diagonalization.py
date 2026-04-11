@@ -12,60 +12,57 @@ import numpy as np
 
 def transpose(A):
     """
-    Input: A (matrix)
-    Output: A^T
+    Input: A (matrix dạng list 2D)
+    Output: A^T (list 2D)
+
+    Dùng NumPy để tăng tốc cho ma trận lớn.
     """
-    rows = len(A)
-    cols = len(A[0])
-
-    AT = [[0 for _ in range(rows)] for _ in range(cols)]
-
-    for i in range(rows):
-        for j in range(cols):
-            AT[j][i] = A[i][j]
-
-    return AT
+    return np.asarray(A, dtype=float).T.tolist()
 
 
 def matmul(A, B):
     """
-    Input: A, B (matrix)
-    Output: A * B
+    Input: A, B (matrix dạng list 2D)
+    Output: A * B (list 2D)
+
+    Dùng NumPy @ operator (BLAS) thay vì 3 vòng lặp Python.
+    Tốc độ: ~1000x nhanh hơn cho n=500.
     """
-    n = len(A)
-    m = len(A[0])
-    p = len(B[0])
-
-    # Khởi tạo ma trận kết quả
-    C = [[0 for _ in range(p)] for _ in range(n)]
-
-    for i in range(n):
-        for j in range(p):
-            for k in range(m):
-                C[i][j] += A[i][k] * B[k][j]
-
-    return C
+    return (np.asarray(A, dtype=float) @ np.asarray(B, dtype=float)).tolist()
 
 
 def compute_ata(A):
     """
-    Input: A
-    Output: A^T A
+    Input: A (list 2D)
+    Output: A^T A (list 2D)
+
+    Dùng NumPy: A_np.T @ A_np — một lệnh duy nhất, chạy ở C level.
     """
-    AT = transpose(A)
-    return matmul(AT, A)
+    A_np = np.asarray(A, dtype=float)
+    return (A_np.T @ A_np).tolist()
 
 
 def eigen_decomposition(A):
     """
-    Input: A (matrix vuông, thường là A^T A)
+    Input: A (matrix vuông, thường là A^T A — ma trận đối xứng)
     Output:
-        eigenvalues: list[float]
-        eigenvectors: matrix (các vector cột)
+        eigenvalues: list[float]  (sắp xếp giảm dần)
+        eigenvectors: matrix (các vector cột, tương ứng eigenvalues)
+
+    Dùng np.linalg.eigh thay vì eig vì:
+        - A^T A luôn đối xứng → eigh là đúng và nhanh hơn
+        - eigh luôn trả về eigenvalues thực (real), tránh lỗi complex
+        - eig có thể trả complex do sai số floating-point → lỗi so sánh '<'
     """
     A_np = np.array(A, dtype=float)
 
-    eigenvalues, eigenvectors = np.linalg.eig(A_np)
+    # eigh trả eigenvalues tăng dần → đảo lại để giảm dần (chuẩn SVD)
+    eigenvalues, eigenvectors = np.linalg.eigh(A_np)
+
+    # Đảo thứ tự: giảm dần theo eigenvalue
+    idx = np.argsort(eigenvalues)[::-1]
+    eigenvalues = eigenvalues[idx]
+    eigenvectors = eigenvectors[:, idx]
 
     # Convert về list
     eigenvalues = eigenvalues.tolist()

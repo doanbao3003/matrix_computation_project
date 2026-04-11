@@ -1,3 +1,5 @@
+_PIVOT_TOL = 1e-12
+
 def gaussian_eliminate(A, b): # Hàm nhận 2 ma trận A, b, gộp 2 ma trận này lại và đưa ma trận về dạng chuẩn tắc (RREF), sau đó tách 2 ma trận ra.
     n, m = A.rows, A.cols
     aug_data = [A.data[i] + b.data[i] for i in range(n)]
@@ -12,7 +14,7 @@ def gaussian_eliminate(A, b): # Hàm nhận 2 ma trận A, b, gộp 2 ma trận 
             if abs(Ab.data[k][j]) > abs(Ab.data[max_idx][j]):
                 max_idx = k
         
-        if abs(Ab.data[max_idx][j]) < 1e-8: continue
+        if abs(Ab.data[max_idx][j]) < _PIVOT_TOL: continue
         
         Ab.swap_rows(pivot_row, max_idx)
         
@@ -38,7 +40,7 @@ def back_substitution(A, b): # Hàm giải hệ phương trình bậc thang.
     n, m = A.rows, A.cols
     
     for i in range(n):
-        if all(abs(A.data[i][j]) < 1e-8 for j in range(m)) and abs(b.data[i][0]) > 1e-8:
+        if all(abs(A.data[i][j]) < _PIVOT_TOL for j in range(m)) and abs(b.data[i][0]) > _PIVOT_TOL:
             print("Hệ phương trình vô nghiệm.")
             return []
 
@@ -46,7 +48,7 @@ def back_substitution(A, b): # Hàm giải hệ phương trình bậc thang.
     is_pivot_column = [False] * m
     for i in range(n):
         for j in range(m):
-            if abs(A.data[i][j]) > 1e-8:
+            if abs(A.data[i][j]) > _PIVOT_TOL:
                 pivot_col[i] = j
                 is_pivot_column[j] = True
                 break
@@ -68,16 +70,16 @@ def back_substitution(A, b): # Hàm giải hệ phương trình bậc thang.
         
         for j in range(curr_col + 1, m):
             coeff = A.data[i][j]
-            if abs(coeff) > 1e-8:
+            if abs(coeff) > _PIVOT_TOL:
                 if isinstance(res[j], (int, float)):
                     constant_part -= coeff * res[j]
                 else:
                     reduced_coeff = -coeff / pivot_val
                     sign = "+" if reduced_coeff > 0 else "-"
-                    val = abs(round(reduced_coeff, 4))
+                    val = abs(reduced_coeff)
                     expression_parts.append(f"{sign} {val}*{res[j]}")
 
-        final_constant = round(constant_part / pivot_val, 4)
+        final_constant = constant_part / pivot_val
         
         if not expression_parts:
             res[curr_col] = final_constant
