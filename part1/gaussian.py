@@ -1,4 +1,4 @@
-_PIVOT_TOL = 1e-12
+_PIVOT_TOL = 1e-10
 
 def gaussian_eliminate(A, b): # Hàm nhận 2 ma trận A, b, gộp 2 ma trận này lại và đưa ma trận về dạng chuẩn tắc (RREF), sau đó tách 2 ma trận ra.
     n, m = A.rows, A.cols

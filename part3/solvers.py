@@ -131,7 +131,7 @@ def solve_gauss_part1(A, b):
     # back_substitution dùng ngưỡng 1e-10 để phân biệt:
     #   - Hàng A toàn 0 VÀ b ≠ 0 → kết luận vô nghiệm
     # Nên nếu hàng A gần 0, ta ép b về 0 luôn để tránh nhận nhầm.
-    ZERO_ROW_TOL = 1e-11  # ngưỡng rộng hơn 1e-12 của gaussian.py
+    ZERO_ROW_TOL = 1e-9  # rộng hơn _PIVOT_TOL=1e-10 của gaussian.py
     m = A_mat.cols
     for i in range(A_mat.rows):
         if all(abs(A_mat.data[i][j]) < ZERO_ROW_TOL for j in range(m)):
