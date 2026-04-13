@@ -1,17 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-File: manim_scene_revised.py
-Người làm: Đoàn Bảo
-
-Nhiệm vụ:
-- Tạo video Manim minh họa:
-    1. Chéo hóa
-    2. SVD
-    3. Hình học SVD
-    4. Ứng dụng
-
-"""
-
 from manim import *
 import math
 import unicodedata

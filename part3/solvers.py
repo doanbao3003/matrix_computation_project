@@ -1,23 +1,3 @@
-"""
-File: solvers.py
-Người làm: Quang Phát
-
-Nhiệm vụ:
-- Cài đặt các hàm giải hệ phương trình cho Phần 3.
-- Tái sử dụng:
-    1. Gauss từ Phần 1
-    2. Phân rã từ Phần 2
-    3. Viết mới Gauss-Seidel
-- Chuẩn hóa đầu ra để benchmark và notebook dùng chung được.
-
-Lưu ý quan trọng:
-- benchmark.py truyền A dạng list 2D, b dạng list phẳng (flat list).
-- Mọi solver đều nhận (A, b) với format trên và trả về SolveResult.
-- Class Matrix được tách ra file part1/matrix.py, import từ đó.
-  Khi import matrix.py, nó tự động inject Matrix vào builtins
-  để gaussian.py vẫn gọi Matrix() trực tiếp được.
-"""
-
 import os
 import sys
 import math
@@ -34,9 +14,8 @@ for _path in [_current_dir, _part1_dir, _part2_dir]:
     if _path not in sys.path:
         sys.path.insert(0, _path)
 
-from matrix import Matrix
-from gaussian import gaussian_eliminate, back_substitution
-from decomposition import svd, matmul, transpose, inverse_diagonal
+from part1.gaussian import gaussian_eliminate, back_substitution, Matrix
+from part2.decomposition import svd, matmul, transpose, inverse_diagonal
 
 # PHẦN 1: KIỂU DỮ LIỆU KẾT QUẢ CHUẨN HÓA
 @dataclass
@@ -72,9 +51,6 @@ def relative_residual_l2(A, x, b):
     Trả về:
         float: sai số tương đối (càng nhỏ càng tốt)
         inf nếu ||b|| ≈ 0
-
-    Vai trò:
-        Dùng chung cho benchmark và phân tích kết quả.
     """
     import numpy as np
 

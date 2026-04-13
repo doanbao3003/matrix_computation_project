@@ -1,34 +1,3 @@
-"""
-File: benchmark.py
-Người làm: Phát
-Vị trí: part3/benchmark.py
-
-Nhiệm vụ:
-- Tạo dữ liệu thử nghiệm cho Phần 3.
-- Đo thời gian chạy trung bình 5 lần.
-- Đo sai số tương đối ||Ax - b||₂ / ||b||₂.
-- Lưu bảng kết quả JSON để analysis.ipynb phân tích.
-
-Cấu trúc thư mục kỳ vọng (theo đề):
-    Group_<ID>/
-    ├── part1/
-    │   ├── matrix.py
-    │   └── gaussian.py
-    ├── part2/
-    │   └── decomposition.py
-    └── part3/
-        ├── solvers.py      ← import từ đây
-        └── benchmark.py   ← file này
-
-Phân công:
-- Sau khi hoàn tất cần thống nhất format dữ liệu với Thoại (analysis.ipynb).
-
-Cải tiến:
-- Dùng NumPy để tăng tốc sinh ma trận và tính sai số.
-- Các hàm sinh ma trận nội bộ dùng numpy array, chuyển về list khi trả ra
-  (vì solvers.py yêu cầu list 2D và list phẳng).
-"""
-
 import json
 import math
 import os

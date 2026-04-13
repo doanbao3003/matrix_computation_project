@@ -1,4 +1,5 @@
-from gaussian import gaussian_eliminate
+from gaussian import gaussian_eliminate, Matrix
+
 def inverse(A): # Hàm tìm nghịch đảo ma trận bằng phương pháp Gauss-Jordan
     if A.rows != A.cols:
         raise ValueError(f"Ma trận {A.name} không phải ma trận vuông ({A.rows}x{A.cols}).")

@@ -1,12 +1,3 @@
-"""
-File: decomposition.py
-Người làm: Huỳnh Chí Thoại
-
-Nhiệm vụ:
-- Xây dựng SVD từ eigen decomposition
-- Gọi eigen từ diagonalization.py
-"""
-
 from diagonalization import eigen_decomposition, compute_ata, transpose, matmul
 import math # Thư viện sử dụng căn bậc 2
 
