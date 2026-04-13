@@ -326,7 +326,7 @@ def benchmark_suite(ds_kich_thuoc=None):
     for n in ds_kich_thuoc:
         for mat_type, mat_gen_func in matrix_configs:
             dem += 1
-            header = f"[{dem:>2}/{tong_cau_hinh}] n={n:>4}, loại={mat_type}"
+            header = f"[{dem}/{tong_cau_hinh}] n = {n}, loại = {mat_type}"
 
             print(f"{header} =>")
 
@@ -349,7 +349,7 @@ def benchmark_suite(ds_kich_thuoc=None):
                 res["matrix_type"] = mat_type
                 ket_qua.append(res)
 
-                status = "OK  " if res["success"] else "FAIL"
+                status = "OK" if res["success"] else "FAIL"
                 iter_str = f"  iter={res['iterations']}" if res["iterations"] is not None else ""
                 print(
                     f"  [{status}] {res['method']:<35}"
