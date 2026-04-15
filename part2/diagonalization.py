@@ -3,9 +3,9 @@ import sys
 import math
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
-_part1_dir = os.path.join(os.path.dirname(_current_dir), "part1")
-if _part1_dir not in sys.path:
-    sys.path.insert(0, _part1_dir)
+_root_dir = os.path.dirname(_current_dir)
+if _root_dir not in sys.path:
+    sys.path.insert(0, _root_dir)
 
 from part1.gaussian import Matrix
 
