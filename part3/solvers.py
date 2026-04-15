@@ -105,34 +105,34 @@ def relative_residual_l2(A, x, b):
 def solve_gauss_part1(A, b):
     """
     Giải hệ Ax = b bằng phương pháp khử Gauss-Jordan từ Part 1.
-
+ 
     Luồng xử lý:
         1. Chuyển A (list 2D) và b (list phẳng) → đối tượng Matrix
         2. Gọi gaussian_eliminate() → đưa [A|b] về dạng RREF
         3. Gọi back_substitution() → tìm nghiệm
         4. Kiểm tra: nghiệm duy nhất (toàn số) hay vô số nghiệm (có biến tự do)
         5. Đóng gói kết quả vào SolveResult
-
+ 
     Tham số:
         A: list 2D (nxn) — ma trận hệ số
         b: list phẳng (n,) — vế phải
-
+ 
     Trả về:
         SolveResult
     """
     n = len(A)
-
+ 
     # --- Bước 1: Tạo bản sao dưới dạng Matrix ---
     # Cần copy vì gaussian_eliminate sẽ thay đổi dữ liệu trực tiếp (in-place)
     A_mat = Matrix([row[:] for row in A], "A")
-
+ 
     # Chuyển b từ list phẳng [b1, b2, ...] → ma trận cột [[b1], [b2], ...]
     # vì gaussian_eliminate yêu cầu b là Matrix với mỗi hàng là 1 list
     b_mat = Matrix([[b[i]] for i in range(n)], "b")
-
+ 
     # --- Bước 2: Khử Gauss-Jordan → RREF ---
     gaussian_eliminate(A_mat, b_mat)
-
+ 
     # --- Bước 2.5: Dọn sai số dấu phẩy động ---
     # Với ma trận lớn (n >= 50), sau RREF các hàng cuối của A có thể
     # toàn giá trị gần 0 (vd: 1e-11) do tích lũy sai số floating point,
@@ -147,16 +147,16 @@ def solve_gauss_part1(A, b):
             # Hàng A gần 0 → b tương ứng cũng chỉ là rác số học → ép về 0
             for k in range(b_mat.cols):
                 b_mat.data[i][k] = 0.0
-
+ 
     # --- Bước 3: Giải hệ bậc thang ---
     # back_substitution trả về:
     #   - [] nếu vô nghiệm
     #   - list[float] nếu nghiệm duy nhất
     #   - list[float | str] nếu vô số nghiệm (biến tự do dạng "t1", "t2", ...)
     x_sol = back_substitution(A_mat, b_mat)
-
+ 
     # --- Bước 4: Xử lý kết quả ---
-
+ 
     # Trường hợp 1: Không có nghiệm (hệ vô nghiệm)
     if not x_sol:
         return SolveResult(
@@ -166,24 +166,42 @@ def solve_gauss_part1(A, b):
             method="Gauss-Jordan (Part 1)",
             note="Hệ vô nghiệm"
         )
-
+ 
     # Trường hợp 2: Kiểm tra xem nghiệm có phải toàn số không
     numeric_x = []
+    has_free_vars = False
     for val in x_sol:
         if isinstance(val, (int, float)):
-            # Phần tử là số → thêm vào danh sách nghiệm
             numeric_x.append(float(val))
         else:
-            # Phần tử là chuỗi biểu thức (vd: "2.0 + 1.0*t1")
-            # → hệ có vô số nghiệm, không trả nghiệm cụ thể cho benchmark
-            return SolveResult(
-                x=[],
-                converged=True,
-                iterations=None,
-                method="Gauss-Jordan (Part 1)",
-                note=f"Hệ có vô số nghiệm: {x_sol}"
-            )
-
+            has_free_vars = True
+            break
+ 
+    if has_free_vars:
+        # Với hệ vuông (n x n), biến tự do thường do ill-conditioning
+        # (pivot bị triệt tiêu do sai số số học), không phải rank thiếu thực sự.
+        # Gán tất cả biến tự do = 0 để lấy nghiệm xấp xỉ (particular solution).
+        approx_x = []
+        for val in x_sol:
+            if isinstance(val, (int, float)):
+                approx_x.append(float(val))
+            else:
+                # Biến tự do: lấy hằng số đứng trước, bỏ phần t
+                # Ví dụ: "2.5 + 1.0*t1" → lấy 2.5; nếu chỉ là "t1" → 0.0
+                try:
+                    constant = float(str(val).split()[0])
+                    approx_x.append(constant)
+                except (ValueError, IndexError):
+                    approx_x.append(0.0)
+ 
+        return SolveResult(
+            x=approx_x,
+            converged=False,
+            iterations=None,
+            method="Gauss-Jordan (Part 1)",
+            note="Ma trận ill-conditioned: pivot bị mất do sai số số học, nghiệm xấp xỉ (free vars = 0)"
+        )
+ 
     # Trường hợp 3: Nghiệm duy nhất
     return SolveResult(
         x=numeric_x,

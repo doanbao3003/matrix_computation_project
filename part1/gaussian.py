@@ -12,7 +12,7 @@ def gaussian_eliminate(A, b): # Hàm nhận 2 ma trận A, b, gộp 2 ma trận 
             if abs(Ab.data[k][j]) > abs(Ab.data[max_idx][j]):
                 max_idx = k
         
-        if abs(Ab.data[max_idx][j]) < 1e-8: continue
+        if abs(Ab.data[max_idx][j]) < 1e-10: continue
         
         Ab.swap_rows(pivot_row, max_idx)
         
@@ -38,7 +38,7 @@ def back_substitution(A, b): # Hàm giải hệ phương trình bậc thang.
     n, m = A.rows, A.cols
     
     for i in range(n):
-        if all(abs(A.data[i][j]) < 1e-8 for j in range(m)) and abs(b.data[i][0]) > 1e-8:
+        if all(abs(A.data[i][j]) < 1e-10 for j in range(m)) and abs(b.data[i][0]) > 1e-10:
             print("Hệ phương trình vô nghiệm.")
             return []
 
@@ -46,7 +46,7 @@ def back_substitution(A, b): # Hàm giải hệ phương trình bậc thang.
     is_pivot_column = [False] * m
     for i in range(n):
         for j in range(m):
-            if abs(A.data[i][j]) > 1e-8:
+            if abs(A.data[i][j]) > 1e-10:
                 pivot_col[i] = j
                 is_pivot_column[j] = True
                 break
@@ -68,7 +68,7 @@ def back_substitution(A, b): # Hàm giải hệ phương trình bậc thang.
         
         for j in range(curr_col + 1, m):
             coeff = A.data[i][j]
-            if abs(coeff) > 1e-8:
+            if abs(coeff) > 1e-10:
                 if isinstance(res[j], (int, float)):
                     constant_part -= coeff * res[j]
                 else:

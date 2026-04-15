@@ -65,9 +65,8 @@ def eigen_decomposition(A):
     """
     A_np = np.array(A, dtype=float)
 
-    eigenvalues, eigenvectors = np.linalg.eig(A_np)
+    eigenvalues, eigenvectors = np.linalg.eigh(A_np)
 
-    # Convert về list
     eigenvalues = eigenvalues.tolist()
     eigenvectors = eigenvectors.tolist()
 
