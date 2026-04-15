@@ -1,0 +1,66 @@
+======================================================================
+  BENCHMARK PHẦN 3 – So sánh các phương pháp giải hệ Ax = b
+  Kích thước: n ∈ {50, 100, 200, 500, 1000}
+  Loại ma trận: Random | SPD | Hilbert (ill-conditioned)
+  Số lần đo mỗi cấu hình: 5 lần (lấy trung bình)
+======================================================================
+[1/15] n = 50, loại = random =>
+  [OK] Gauss-Jordan (Part 1)                avg_time=0.0061s  err=4.20e-16
+  [OK] SVD Decomposition (Part 2)           avg_time=0.1074s  err=1.82e-15
+  [OK] Gauss-Seidel                         avg_time=0.0011s  err=4.06e-14  iter=9  note=Hội tụ sau 9 vòng lặp (chéo trội)
+[2/15] n = 50, loại = spd =>
+  [OK] Gauss-Jordan (Part 1)                avg_time=0.0055s  err=3.75e-16
+  [OK] SVD Decomposition (Part 2)           avg_time=0.0971s  err=3.65e-10
+  [OK] Gauss-Seidel                         avg_time=0.0162s  err=2.88e-12  iter=178  note=Hội tụ sau 178 vòng lặp (không chéo trội)
+[3/15] n = 50, loại = hilbert =>
+  [OK] Gauss-Jordan (Part 1)                avg_time=0.0025s  err=4.38e+03  note=Vô số nghiệm (ma trận kém điều kiện) — dùng nghiệm xấp xỉ (biến tự do = 0)
+  [OK] SVD Decomposition (Part 2)           avg_time=0.0304s  err=1.39e-05
+  [OK] Gauss-Seidel                         avg_time=0.0961s  err=2.95e-05  iter=1000  note=Không hội tụ sau 1000 vòng lặp (không chéo trội — không đảm bảo hội tụ)
+[4/15] n = 100, loại = random =>
+  [OK] Gauss-Jordan (Part 1)                avg_time=0.0450s  err=6.25e-16
+  [OK] SVD Decomposition (Part 2)           avg_time=0.8528s  err=4.00e-12
+  [OK] Gauss-Seidel                         avg_time=0.0035s  err=2.40e-15  iter=9  note=Hội tụ sau 9 vòng lặp (chéo trội)
+[5/15] n = 100, loại = spd =>
+  [OK] Gauss-Jordan (Part 1)                avg_time=0.0444s  err=7.68e-16
+  [OK] SVD Decomposition (Part 2)           avg_time=0.8697s  err=6.66e-12
+  [OK] Gauss-Seidel                         avg_time=0.1200s  err=1.95e-12  iter=347  note=Hội tụ sau 347 vòng lặp (không chéo trội)
+[6/15] n = 100, loại = hilbert =>
+  [OK] Gauss-Jordan (Part 1)                avg_time=0.0103s  err=3.54e+05  note=Vô số nghiệm (ma trận kém điều kiện) — dùng nghiệm xấp xỉ (biến tự do = 0)
+  [OK] SVD Decomposition (Part 2)           avg_time=0.1943s  err=5.91e-05
+  [OK] Gauss-Seidel                         avg_time=0.3439s  err=3.32e-05  iter=1000  note=Không hội tụ sau 1000 vòng lặp (không chéo trội — không đảm bảo hội tụ)
+[7/15] n = 200, loại = random =>
+  [OK] Gauss-Jordan (Part 1)                avg_time=0.3396s  err=8.23e-16
+  [OK] SVD Decomposition (Part 2)           avg_time=7.3736s  err=6.36e-13
+  [OK] Gauss-Seidel                         avg_time=0.0128s  err=1.35e-14  iter=8  note=Hội tụ sau 8 vòng lặp (chéo trội)
+[8/15] n = 200, loại = spd =>
+  [OK] Gauss-Jordan (Part 1)                avg_time=0.3480s  err=9.85e-16
+  [OK] SVD Decomposition (Part 2)           avg_time=7.4338s  err=2.73e-13
+  [OK] Gauss-Seidel                         avg_time=0.8958s  err=1.16e-12  iter=671  note=Hội tụ sau 1000 vòng lặp (không chéo trội) 
+[9/15] n = 200, loại = hilbert =>
+  [OK] Gauss-Jordan (Part 1)                avg_time=0.0452s  err=9.54e+04  note=Vô số nghiệm (ma trận kém điều kiện) — dùng nghiệm xấp xỉ (biến tự do = 0)
+  [OK] SVD Decomposition (Part 2)           avg_time=1.3977s  err=2.01e-05
+  [OK] Gauss-Seidel                         avg_time=1.3819s  err=4.38e-05  iter=1000  note=Không hội tụ sau 1000 vòng lặp (không chéo trội — không đảm bảo hội tụ) 
+[10/15] n = 500, loại = random =>
+  [OK] Gauss-Jordan (Part 1)                avg_time=5.4646s  err=1.31e-15
+  [OK] SVD Decomposition (Part 2)           avg_time=134.7385s  err=1.53e-14
+  [OK] Gauss-Seidel                         avg_time=0.0813s  err=4.74e-16  iter=8  note=Hội tụ sau 8 vòng lặp (chéo trội)
+[11/15] n = 500, loại = spd =>
+  [OK] Gauss-Jordan (Part 1)                avg_time=5.3594s  err=1.39e-15
+  [OK] SVD Decomposition (Part 2)           avg_time=166.1480s  err=3.15e-12
+  [OK] Gauss-Seidel                         avg_time=8.7962s  err=3.33e-09  iter=1000  note=Không hội tụ sau 1000 vòng lặp (không chéo trội — không đảm bảo hội tụ) 
+[12/15] n = 500, loại = hilbert =>
+  [OK] Gauss-Jordan (Part 1)                avg_time=0.3272s  err=1.14e+07  note=Vô số nghiệm (ma trận kém điều kiện) — dùng nghiệm xấp xỉ (biến tự do = 0)
+  [OK] SVD Decomposition (Part 2)           avg_time=20.4135s  err=4.18e-05
+  [OK] Gauss-Seidel                         avg_time=8.8121s  err=5.03e-05  iter=1000  note=Không hội tụ sau 1000 vòng lặp (không chéo trội — không đảm bảo hội tụ) 
+[13/15] n = 1000, loại = random =>
+  [OK] Gauss-Jordan (Part 1)                avg_time=44.2364s  err=1.83e-15
+  [OK] SVD Decomposition (Part 2)           avg_time=1441.2578s  err=1.04e-14
+  [OK] Gauss-Seidel                         avg_time=0.4684s  err=3.16e-15  iter=7  note=Hội tụ sau 7 vòng lặp (chéo trội)
+[14/15] n = 1000, loại = spd =>
+  [OK] Gauss-Jordan (Part 1)                avg_time=69.3527s  err=2.11e-15
+  [OK] SVD Decomposition (Part 2)           avg_time=1482.2361s  err=4.44e-12
+  [OK] Gauss-Seidel                         avg_time=36.0938s  err=4.84e-07  iter=1000  note=Không hội tụ sau 1000 vòng lặp (không chéo trội — không đảm bảo hội tụ)
+[15/15] n = 1000, loại = hilbert =>
+  [OK] Gauss-Jordan (Part 1)                avg_time=1.4179s  err=5.93e+09  note=Vô số nghiệm (ma trận kém điều kiện) — dùng nghiệm xấp xỉ (biến tự do = 0)
+  [OK] SVD Decomposition (Part 2)           avg_time=175.5360s  err=1.16e-04
+  [OK] Gauss-Seidel                         avg_time=36.2495s  err=2.60e-04  iter=1000  note=Không hội tụ sau 1000 vòng lặp (không chéo trội — không đảm bảo hội tụ)

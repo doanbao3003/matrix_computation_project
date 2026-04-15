@@ -1,13 +1,4 @@
-"""
-File: decomposition.py
-Người làm: Huỳnh Chí Thoại
-
-Nhiệm vụ:
-- Xây dựng SVD từ eigen decomposition
-- Gọi eigen từ diagonalization.py
-"""
-
-from diagonalization import eigen_decomposition, compute_ata
+from diagonalization import eigen_decomposition, compute_ata, transpose, matmul
 import math # Thư viện sử dụng căn bậc 2
 
 # Ngưỡng sai số học
@@ -51,60 +42,6 @@ def build_sigma(singular_values, m, n):
     return Sigma
 
 
-def transpose(A):
-    """
-    Input:
-        Ma trận A (m x n)
-    Output:
-        Ma trận chuyển vị của A (n x m)
-    """
-
-    if not A or not A[0]:
-        raise ValueError("Ma trận A rỗng")
-
-    # Lay kich thuoc
-    m = len(A)
-    n = len(A[0])
-
-    # Tạo ma trận có kích thước n x m
-    result = [[0.0 for _ in range(m)] for _ in range(n)]
-
-    # Hoán đổi vị trí
-    for i in range(m):
-        for j in range(n):
-            result[j][i] = A[i][j]
-
-    return result
-
-
-def matmul(A, B):
-    """
-    Input:
-        2 ma trận A và B
-    Output:
-        Ma trận tích của A và B
-    """
-
-    # Lấy kích thước
-    m_A = len(A)
-    n_A = len(A[0])
-    m_B = len(B)
-    n_B = len(B[0])
-
-    # Kiểm tra điều kiện nhân
-    if n_A != m_B:
-        raise ValueError("Kích thước ma trân không hợp lệ để nhân")
-    
-    # Khởi tạo ma trận kết quả
-    result = [[0.0 for _ in range(n_B)] for _ in range(m_A)]
-
-    # Nhân 2 ma trận
-    for i in range(m_A):
-        for j in range(n_B):
-            for k in range(n_A):
-                result[i][j] += A[i][k] * B[k][j]
-
-    return result
 
 
 def inverse_diagonal(Sigma):

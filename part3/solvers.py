@@ -1,23 +1,3 @@
-"""
-File: solvers.py
-Người làm: Quang Phát
-
-Nhiệm vụ:
-- Cài đặt các hàm giải hệ phương trình cho Phần 3.
-- Tái sử dụng:
-    1. Gauss từ Phần 1
-    2. Phân rã từ Phần 2
-    3. Viết mới Gauss-Seidel
-- Chuẩn hóa đầu ra để benchmark và notebook dùng chung được.
-
-Lưu ý quan trọng:
-- benchmark.py truyền A dạng list 2D, b dạng list phẳng (flat list).
-- Mọi solver đều nhận (A, b) với format trên và trả về SolveResult.
-- Class Matrix được tách ra file part1/matrix.py, import từ đó.
-  Khi import matrix.py, nó tự động inject Matrix vào builtins
-  để gaussian.py vẫn gọi Matrix() trực tiếp được.
-"""
-
 import os
 import sys
 import math
@@ -34,9 +14,8 @@ for _path in [_current_dir, _part1_dir, _part2_dir]:
     if _path not in sys.path:
         sys.path.insert(0, _path)
 
-from matrix import Matrix
-from gaussian import gaussian_eliminate, back_substitution
-from decomposition import svd, matmul, transpose, inverse_diagonal
+from part1.gaussian import gaussian_eliminate, back_substitution, Matrix
+from part2.decomposition import svd, matmul, transpose, inverse_diagonal
 
 # PHẦN 1: KIỂU DỮ LIỆU KẾT QUẢ CHUẨN HÓA
 @dataclass
@@ -72,32 +51,20 @@ def relative_residual_l2(A, x, b):
     Trả về:
         float: sai số tương đối (càng nhỏ càng tốt)
         inf nếu ||b|| ≈ 0
-
-    Vai trò:
-        Dùng chung cho benchmark và phân tích kết quả.
     """
-    n = len(A)
+    import numpy as np
 
-    # Bước 1: Tính tích Ax (nhân ma trận với vector)
-    Ax = [0.0] * n
-    for i in range(n):
-        for j in range(n):
-            Ax[i] += A[i][j] * x[j]
+    A_np = np.asarray(A, dtype=float)
+    x_np = np.asarray(x, dtype=float)
+    b_np = np.asarray(b, dtype=float)
 
-    # Bước 2: Tính vector sai lệch r = Ax - b
-    residual = [Ax[i] - b[i] for i in range(n)]
+    residual = A_np @ x_np - b_np
+    norm_b = np.linalg.norm(b_np)
 
-    # Bước 3: Tính chuẩn L2 của residual = √(Σ rᵢ²)
-    norm_res = math.sqrt(sum(r * r for r in residual))
-
-    # Bước 4: Tính chuẩn L2 của b
-    norm_b = math.sqrt(sum(bi * bi for bi in b))
-
-    # Bước 5: Nếu ||b|| quá nhỏ thì trả về inf (tránh chia cho 0)
     if norm_b < 1e-15:
         return float("inf")
 
-    return norm_res / norm_b
+    return float(np.linalg.norm(residual) / norm_b)
 
 # PHẦN 3: SOLVER 1 — GAUSS-JORDAN (TÁI SỬ DỤNG PART 1)
 
@@ -140,7 +107,7 @@ def solve_gauss_part1(A, b):
     # back_substitution dùng ngưỡng 1e-10 để phân biệt:
     #   - Hàng A toàn 0 VÀ b ≠ 0 → kết luận vô nghiệm
     # Nên nếu hàng A gần 0, ta ép b về 0 luôn để tránh nhận nhầm.
-    ZERO_ROW_TOL = 1e-9  # ngưỡng rộng hơn 1e-10 của back_substitution
+    ZERO_ROW_TOL = 1e-9  # rộng hơn _PIVOT_TOL=1e-10 của gaussian.py
     m = A_mat.cols
     for i in range(A_mat.rows):
         if all(abs(A_mat.data[i][j]) < ZERO_ROW_TOL for j in range(m)):
@@ -168,11 +135,27 @@ def solve_gauss_part1(A, b):
         )
  
     # Trường hợp 2: Kiểm tra xem nghiệm có phải toàn số không
+    has_free_vars = False
     numeric_x = []
     has_free_vars = False
     for val in x_sol:
         if isinstance(val, (int, float)):
+            # Phần tử là số → giữ nguyên
             numeric_x.append(float(val))
+        elif isinstance(val, str):
+            has_free_vars = True
+            # Trích phần hằng số từ biểu thức (vd: "2.5 + 1.0*t1 - 0.3*t2")
+            # hoặc nếu là biến tự do thuần ("t1") → gán = 0
+            try:
+                # Nếu biểu thức bắt đầu bằng số (hằng số + các term)
+                # → lấy phần hằng trước dấu cách đầu tiên
+                parts = val.strip().split()
+                first_token = parts[0] if parts else "0"
+                # Kiểm tra token đầu có phải số không
+                numeric_x.append(float(first_token))
+            except (ValueError, IndexError):
+                # Biến tự do thuần ("t1") hoặc expression phức tạp → gán 0
+                numeric_x.append(0.0)
         else:
             has_free_vars = True
             break
@@ -202,6 +185,15 @@ def solve_gauss_part1(A, b):
             note="Ma trận ill-conditioned: pivot bị mất do sai số số học, nghiệm xấp xỉ (free vars = 0)"
         )
  
+    if has_free_vars:
+        return SolveResult(
+            x=numeric_x,
+            converged=True,
+            iterations=None,
+            method="Gauss-Jordan (Part 1)",
+            note="Vô số nghiệm (ma trận kém điều kiện) — dùng nghiệm xấp xỉ (biến tự do = 0)"
+        )
+
     # Trường hợp 3: Nghiệm duy nhất
     return SolveResult(
         x=numeric_x,
