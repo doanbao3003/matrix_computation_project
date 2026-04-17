@@ -1,21 +1,14 @@
 import os
 import sys
 import math
+import numpy as np
+
 from dataclasses import dataclass
 from typing import List, Optional
 
-# THIẾT LẬP MÔI TRƯỜNG
-_current_dir = os.path.dirname(os.path.abspath(__file__))
-_project_root = os.path.dirname(_current_dir)  # thư mục gốc dự án
-_part1_dir = os.path.join(_project_root, "part1")
-_part2_dir = os.path.join(_project_root, "part2")
-
-for _path in [_current_dir, _part1_dir, _part2_dir]:
-    if _path not in sys.path:
-        sys.path.insert(0, _path)
-
 from part1.gaussian import gaussian_eliminate, back_substitution, Matrix
 from part2.decomposition import svd, matmul, transpose, inverse_diagonal
+
 
 # PHẦN 1: KIỂU DỮ LIỆU KẾT QUẢ CHUẨN HÓA
 @dataclass
@@ -52,8 +45,7 @@ def relative_residual_l2(A, x, b):
         float: sai số tương đối (càng nhỏ càng tốt)
         inf nếu ||b|| ≈ 0
     """
-    import numpy as np
-
+    # Sử dụng numpy để tính toán
     A_np = np.asarray(A, dtype=float)
     x_np = np.asarray(x, dtype=float)
     b_np = np.asarray(b, dtype=float)
@@ -63,12 +55,10 @@ def relative_residual_l2(A, x, b):
 
     if norm_b < 1e-15:
         return float("inf")
-
+    # Trả về sai số tương đối
     return float(np.linalg.norm(residual) / norm_b)
 
-# PHẦN 3: SOLVER 1 — GAUSS-JORDAN (TÁI SỬ DỤNG PART 1)
-
-
+# PHẦN 3: SOLVER 1 — GAUSS-JORDAN 
 def solve_gauss_part1(A, b):
     """
     Giải hệ Ax = b bằng phương pháp khử Gauss-Jordan từ Part 1.
@@ -99,7 +89,7 @@ def solve_gauss_part1(A, b):
  
     # --- Bước 2: Khử Gauss-Jordan → RREF ---
     gaussian_eliminate(A_mat, b_mat)
- 
+    
     # --- Bước 2.5: Dọn sai số dấu phẩy động ---
     # Với ma trận lớn (n >= 50), sau RREF các hàng cuối của A có thể
     # toàn giá trị gần 0 (vd: 1e-11) do tích lũy sai số floating point,
@@ -176,7 +166,7 @@ def solve_gauss_part1(A, b):
                     approx_x.append(constant)
                 except (ValueError, IndexError):
                     approx_x.append(0.0)
- 
+        
         return SolveResult(
             x=approx_x,
             converged=False,
@@ -184,7 +174,7 @@ def solve_gauss_part1(A, b):
             method="Gauss-Jordan (Part 1)",
             note="Ma trận ill-conditioned: pivot bị mất do sai số số học, nghiệm xấp xỉ (free vars = 0)"
         )
- 
+        
     if has_free_vars:
         return SolveResult(
             x=numeric_x,
