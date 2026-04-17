@@ -1,1 +1,6 @@
 numpy
+manim
+matplotlib
+pandas
+sympy
+ipykernel
