@@ -2,7 +2,11 @@ import math
 from diagonalization import transpose, matmul, compute_ata, eigen_decomposition, sort_eigenpairs, build_diagonal
 
 def is_close(a, b, rel_tol=1e-7):
-    """Kiểm tra hai số hoặc hai ma trận có gần bằng nhau hay không."""
+    """
+    Kiểm tra xem hai giá trị (số thực hoặc ma trận dạng list lồng nhau) 
+    có gần bằng nhau hay không, dựa trên sai số tương đối (rel_tol).
+    Dùng để so sánh kết quả tính toán số thực có sai số làm tròn.
+    """
     if isinstance(a, (int, float)) and isinstance(b, (int, float)):
         return math.isclose(a, b, rel_tol=rel_tol, abs_tol=1e-9)
     
@@ -14,10 +18,19 @@ def is_close(a, b, rel_tol=1e-7):
     return a == b
 
 def print_test_result(name, success, message=""):
+    """
+    In kết quả kiểm thử ra terminal theo định dạng: [SUCCESS] hoặc [FAILED].
+    Giúp người dùng dễ dàng theo dõi trạng thái của từng test case.
+    """
     status = "SUCCESS" if success else "FAILED"
     print(f"[{status}] {name}: {message}")
 
 def test_transpose():
+    """
+    Kiểm thử hàm transpose(A) - chuyển vị ma trận.
+    Kiểm tra trên nhiều trường hợp: ma trận vuông, vector hàng, vector cột, 
+    ma trận đơn vị và ma trận không.
+    """
     print("\n--- Testing transpose(A) ---")
     test_cases = [
         {"name": "Square Matrix", "input": [[1, 2], [3, 4]], "expected": [[1, 3], [2, 4]]},
@@ -33,6 +46,11 @@ def test_transpose():
         print_test_result(case["name"], success)
 
 def test_matmul():
+    """
+    Kiểm thử hàm matmul(A, B) - nhân hai ma trận.
+    Kiểm tra các quy tắc nhân ma trận: ma trận đơn vị, ma trận vuông, 
+    ma trận chữ nhật (2x3 nhân 3x2) và nhân với ma trận không.
+    """
     print("\n--- Testing matmul(A, B) ---")
     test_cases = [
         {"name": "Identity multiplication", "A": [[1, 2], [3, 4]], "B": [[1, 0], [0, 1]], "expected": [[1, 2], [3, 4]]},
@@ -48,6 +66,11 @@ def test_matmul():
         print_test_result(case["name"], success)
 
 def test_compute_ata():
+    """
+    Kiểm thử hàm compute_ata(A) - tính ma trận A^T * A.
+    Đây là một thao tác quan trọng trong phân rã SVD và Diagonalization 
+    vì A^T * A luôn là ma trận đối xứng và nửa xác định dương.
+    """
     print("\n--- Testing compute_ata(A) ---")
     test_cases = [
         {"name": "Identity", "input": [[1, 0], [0, 1]], "expected": [[1, 0], [0, 1]]},
@@ -63,8 +86,13 @@ def test_compute_ata():
         print_test_result(case["name"], success)
 
 def test_eigen_decomposition():
+    """
+    Kiểm thử hàm eigen_decomposition(A) - phân rã trị riêng và vector riêng.
+    Xác minh kết quả dựa trên định nghĩa: A * v = λ * v.
+    Với mỗi trị riêng λ và vector riêng tương ứng v, ta kiểm tra xem 
+    phép nhân ma trận A với v có bằng phép nhân số λ với v hay không.
+    """
     print("\n--- Testing eigen_decomposition(A) ---")
-    # Kiểm tra tính đúng đắn qua định nghĩa: A * v = lambda * v
     test_cases = [
         {"name": "Identity 2x2", "input": [[1, 0], [0, 1]]},
         {"name": "Diagonal Matrix", "input": [[2, 0], [0, 5]]},
@@ -75,18 +103,17 @@ def test_eigen_decomposition():
     
     for case in test_cases:
         evals, evecs = eigen_decomposition(case["input"])
-        # Verification: A * V == V * D
-        # Transpose evecs to get columns back if needed, but in our implementation, evecs are COLUMNS
-        # Let's verify each: A * v_i = lambda_i * v_i
+        
+        # Kiểm tra tính đúng đắn cho từng cặp trị riêng - vector riêng
         valid = True
         n = len(case["input"])
         for i in range(n):
             lambda_i = evals[i]
-            v_i = [[evecs[j][i]] for j in range(n)] # column vector i
+            v_i = [[evecs[j][i]] for j in range(n)] # Trích xuất vector riêng thứ i (dạng cột)
             
-            # Left side: A * v_i
+            # Vế trái: A * v_i
             left = matmul(case["input"], v_i)
-            # Right side: lambda_i * v_i
+            # Vế phải: lambda_i * v_i
             right = [[lambda_i * v_i[j][0]] for j in range(n)]
             
             if not is_close(left, right):
@@ -96,6 +123,11 @@ def test_eigen_decomposition():
         print_test_result(case["name"], valid)
 
 def test_sort_eigenpairs():
+    """
+    Kiểm thử hàm sort_eigenpairs() - sắp xếp cặp trị riêng/vector riêng.
+    Hàm này phải sắp xếp các trị riêng theo thứ tự giảm dần và 
+    đảm bảo các vector riêng vẫn tương ứng đúng với trị riêng cũ sau khi đổi vị trí.
+    """
     print("\n--- Testing sort_eigenpairs() ---")
     test_cases = [
         {
@@ -137,6 +169,7 @@ def test_sort_eigenpairs():
     
     for case in test_cases:
         res_evals, res_evecs = sort_eigenpairs(case["evals"], case["evecs"])
+        # So sánh kết quả thực tế với kỳ vọng
         success = is_close(res_evals, case["expected_evals"]) and is_close(res_evecs, case["expected_evecs"])
         print_test_result(case["name"], success)
 
